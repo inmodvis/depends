@@ -3,26 +3,55 @@
 #include <fstream>
 #include <regex>
 #include <iomanip>
+#include <algorithm>
+#include <set>
 
 
-bool TreeBuilder::Initilize(std::string sourseDir, std::string includesDir, std::string libDir) 
+bool TreeBuilder::Initilize(std::string& sourseDir, vector <string>& includeslibsDirs)
 {
-	bool result = false;
-	m_sourseDir = sourseDir;
-	m_includesDir = includesDir;
-	m_libDir = libDir;
+	if (std::filesystem::exists(sourseDir))
+	{
+		m_sourseDir = sourseDir;
+	}
+	else 
+	{
+		cerr << "Unanable source dir";
+		return false;
+	}
+	for (auto& u : includeslibsDirs) 
+	{
+		if (std::filesystem::exists(u))
+		{
+			m_includesAndLibsDirs.push_back(u);
+		}
+	}
 	level = -1;
-	//check dirs for exist
-	if (true)
-		result = true;
-	return result;
+	m_initilaized = true;
+	return true;
 }
 
 void TreeBuilder::Run()
 {
-	auto files = ReadDirectory(m_sourseDir);
-	DoWork(files);
-
+	if (m_initilaized) 
+	{
+		auto files = ReadDirectory(m_sourseDir);
+		DoWork(files);
+		cout << "\n";
+		set <size_t> countValues;
+		for (const auto& u : m_count)
+		{
+			countValues.insert(u.second);
+		}
+		auto res = FlipMap(m_count);
+		for (auto& u = countValues.rbegin(); u != countValues.rend(); ++u)
+		{
+			auto iterpair = res.equal_range(*u);
+			for (auto l = iterpair.first; l != iterpair.second; l++)
+			{
+				cout << l->second << " " << l->first << "\n";
+			}
+		}
+	}
 }
 
 void TreeBuilder::DoWork(vector<std::pair<string, char>> &data)
@@ -30,18 +59,9 @@ void TreeBuilder::DoWork(vector<std::pair<string, char>> &data)
 	level++;
 	for (auto i = 0; i < data.size(); i++)
 	{
-		auto work = data[i];
-		// std::cout << std::setfill('.') << setw(level) << data[i].first << "\n";
+		//auto work = data[i];
 		if (CheckAndPrintFile(data[i])) {
-			auto result = GetDependFromFile(work.first); //if only file exists! filecheck();
-			// main work or/and adding to structure
-			level++;
-			for (auto j = 0; j < result.size(); j++)
-			{
-				//std::cout << std::setfill('.') << setw(level) << result[j].first << "\n"; // chackresult() and check before
-				CheckAndPrintFile(result[j]);
-			}
-			level--;
+			auto result = GetDependFromFile(data[i].first);
 			if (!result.empty())
 				DoWork(result);
 				level--;
@@ -50,41 +70,68 @@ void TreeBuilder::DoWork(vector<std::pair<string, char>> &data)
 	}
 }
 
-bool TreeBuilder::CheckAndPrintFile(std::pair<string, char> file) 
+bool TreeBuilder::CheckAndPrintFile(std::pair<string, char>& file) 
 {
 	auto result = false;
 	std::filesystem::path path;
-	switch (file.second)
+	std::filesystem::path checkext(file.first);
+	if (checkext.extension() == L".hpp" || checkext.extension() == L".cpp")
 	{
-	case 0 :		
-		break;
-	case 1 :
-		path = std::filesystem::path(m_sourseDir + "\\" + file.first);
-		if (std::filesystem::exists(path))
+		switch (file.second)
 		{
-			std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level+1) << path.filename().u8string() << "\n";
-			result = true;
+		case 0:
+			for (auto& u : m_includesAndLibsDirs)
+			{
+				path = std::filesystem::path(+"/" + file.first);
+				if (std::filesystem::exists(path))
+				{
+					std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level + 1) << path.filename().u8string() << "\n";
+					result = true;
+					break;
+				}
+			}
+			if (!result)
+			{
+				std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level + 1) << path.filename().u8string() << "(!)\n";
+			}
+			break;
+		case 1:
+			path = std::filesystem::path(m_sourseDir + "/" + file.first);
+			if (std::filesystem::exists(path))
+			{
+				std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level + 1) << path.filename().u8string() << "\n";
+				result = true;
+			}
+			else
+			{
+				std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level + 1) << path.filename().u8string() << "(!)\n";
+			}
+			break;
+		case 2:
+			path = std::filesystem::path(file.first);
+			if (std::filesystem::exists(path))
+			{
+				std::cout << path.filename().u8string() << "\n";
+				result = true;
+			}
+			else
+			{
+				std::cout << path.filename().u8string() << "(!)\n";
+			}
+			break;
+		}
+		auto mapref = m_count.find(path.filename().u8string());
+		if (mapref != m_count.end())
+		{
+			mapref->second++;
+			result = false;
 		}
 		else
 		{
-			std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level+1) << path.filename().u8string() << "(!)\n";
+			m_count[path.filename().u8string()] = 1;
 		}
-		break;
-	case 2 :
-		path = std::filesystem::path(file.first);
-		if (std::filesystem::exists(path)) 
-		{
-			//std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level+1) << path.filename().u8string() << "\n";
-			std::cout << path.filename().u8string() << "\n";
-			result = true;
-		} 
-		else
-		{
-			// std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level+1) << path.filename().u8string() << "(!)\n";
-			std::cout << path.filename().u8string() << "(!)\n";
-		}
-		break;
 	}
+	file.first = path.u8string();
 	return result;
 }
 
@@ -126,7 +173,9 @@ vector<std::pair<string, char>> TreeBuilder::GetDependFromFile(std::string& file
 				commented = true;
 			}
 			if (regex_match(temp, str_expr))
-				//TODO: also #include<aaa>#include"bb" separate by includes and remove everything !!! 
+				//not implemented: unstandard includes like: 
+				//#include<aaa> #include"bb" 
+				//in one line
 			{
 				if (regex_match(temp, str_expr_first))
 					res.push_back(std::pair<string, char>(regex_replace(temp, str_remove, ""), 0));
@@ -172,7 +221,7 @@ vector<std::pair<string, char>> TreeBuilder::ReadDirectory(std::string path)
 		cerr << "No such directory";
 	}
 
-	for (const auto& p : directory) //add directories recrtution 
+	for (const auto& p : directory)  
 	{
 		auto pa = p.path();
 		auto extension = pa.extension();
@@ -183,7 +232,7 @@ vector<std::pair<string, char>> TreeBuilder::ReadDirectory(std::string path)
 		else if (p.is_directory()) {
 			auto sub = ReadDirectory(pa.u8string());
 			for (auto& u : sub)
-				files.push_back(u); //todo optimize
+				files.push_back(u); 
 		}
 	}
 	return files;

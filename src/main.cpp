@@ -17,14 +17,34 @@
 using namespace std;
 
 
-int main() //add argv !
+int main(int argc, char* argv[]) //add argv !
 {
-	string sourcePath = "../../../testPath";
-	string libPath = "../../../testPath";
-	string includePath = "../../../testPath";
+    string sourcePath;
+    std::vector <string> includeandlibPaths;
+    const char* flagPath = "-I";
+    if (argc == 1) {
+        cout << "no arguments!" << endl;
+    }
+    else {
+        sourcePath = argv[1];
+        for (int i = 2; i < argc;) {
+            if (*argv[i] == *flagPath && i < argc)
+            {
+                includeandlibPaths.push_back(argv[i + 1]);
+            }
+            i += 2;
+        }
+        auto treeBuilder = std::make_shared<TreeBuilder>();
+        if (treeBuilder->Initilize(sourcePath, includeandlibPaths))
+            treeBuilder->Run();
+    }
 	
 
-	auto treeBuilder = std::make_shared<TreeBuilder>();
-	if (treeBuilder->Initilize(sourcePath, includePath, libPath))
-		treeBuilder->Run();
+    sourcePath = "../../../testPath";
+    includeandlibPaths.push_back("C:\\MyFiles\\Work\\repos\\depends\\tes2");
+    auto treeBuilder = std::make_shared<TreeBuilder>();
+    if (treeBuilder->Initilize(sourcePath, includeandlibPaths))
+        treeBuilder->Run();
 }
+
+    

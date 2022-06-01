@@ -1,15 +1,17 @@
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <vector>
-#include <map>
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
-#include <regex>
+#include <iostream>
 #include <iomanip>
-#include <algorithm>
+#include <iomanip>
+#include <map>
+#include <regex>
 #include <set>
+#include <string>
+#include <vector>
+
 
 using namespace std;
 
@@ -17,18 +19,19 @@ class TreeBuilder
 {
 private:
 	string m_sourseDir;
-	bool m_initilaized = false;
+	bool m_initialized = false;
 	vector <string> m_includesAndLibsDirs;
 	int level;
 	map <string, size_t> m_count;
-
-public: 
-	bool Initilize(std::string& sourseDir, vector <string>& includeslibsDirs);
-	void Run();
-	void DoWork(vector<std::pair<string, char>> &data);
-	bool CheckAndPrintFile(std::pair<string, char> &file);
+	void DoWork(vector<std::pair<string, char>>& data);
+	bool CheckAndPrintFile(std::pair<string, char>& file);
 	vector<std::pair<string, char>> ReadDirectory(std::string dir);
 	vector<std::pair<string, char>> TreeBuilder::GetDependFromFile(std::string& file);
+
+public: 
+	bool Initialize(std::string& sourseDir, vector <string>& includeslibsDirs);
+	void Run();
+	
 
 };
 

@@ -1,0 +1,1 @@
+.\depends.exe ./testPath -I ./tes2

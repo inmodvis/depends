@@ -35,16 +35,10 @@ int main(int argc, char* argv[]) //add argv !
             i += 2;
         }
         auto treeBuilder = std::make_shared<TreeBuilder>();
-        if (treeBuilder->Initilize(sourcePath, includeandlibPaths))
+        if (treeBuilder->Initialize(sourcePath, includeandlibPaths))
             treeBuilder->Run();
     }
 	
-
-    sourcePath = "../../../testPath";
-    includeandlibPaths.push_back("C:\\MyFiles\\Work\\repos\\depends\\tes2");
-    auto treeBuilder = std::make_shared<TreeBuilder>();
-    if (treeBuilder->Initilize(sourcePath, includeandlibPaths))
-        treeBuilder->Run();
 }
 
     

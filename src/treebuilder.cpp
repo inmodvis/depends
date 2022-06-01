@@ -1,13 +1,8 @@
 #include "treebuilder.h"
-#include <filesystem>
-#include <fstream>
-#include <regex>
-#include <iomanip>
-#include <algorithm>
-#include <set>
 
 
-bool TreeBuilder::Initilize(std::string& sourseDir, vector <string>& includeslibsDirs)
+
+bool TreeBuilder::Initialize(std::string& sourseDir, vector <string>& includeslibsDirs)
 {
 	if (std::filesystem::exists(sourseDir))
 	{
@@ -26,13 +21,13 @@ bool TreeBuilder::Initilize(std::string& sourseDir, vector <string>& includeslib
 		}
 	}
 	level = -1;
-	m_initilaized = true;
+	m_initialized = true;
 	return true;
 }
 
 void TreeBuilder::Run()
 {
-	if (m_initilaized) 
+	if (m_initialized)
 	{
 		auto files = ReadDirectory(m_sourseDir);
 		DoWork(files);
@@ -59,7 +54,6 @@ void TreeBuilder::DoWork(vector<std::pair<string, char>> &data)
 	level++;
 	for (auto i = 0; i < data.size(); i++)
 	{
-		//auto work = data[i];
 		if (CheckAndPrintFile(data[i])) {
 			auto result = GetDependFromFile(data[i].first);
 			if (!result.empty())
@@ -82,29 +76,30 @@ bool TreeBuilder::CheckAndPrintFile(std::pair<string, char>& file)
 		case 0:
 			for (auto& u : m_includesAndLibsDirs)
 			{
-				path = std::filesystem::path(+"/" + file.first);
+				path = std::filesystem::path(u +"/" + file.first);
 				if (std::filesystem::exists(path))
 				{
-					std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level + 1) << path.filename().u8string() << "\n";
+					std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level*2) << path.filename().u8string() << "\n";
 					result = true;
 					break;
 				}
 			}
 			if (!result)
 			{
-				std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level + 1) << path.filename().u8string() << "(!)\n";
+				path = std::filesystem::path(file.first);
+				std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level*2) << path.filename().u8string() << "(!)\n";
 			}
 			break;
 		case 1:
 			path = std::filesystem::path(m_sourseDir + "/" + file.first);
 			if (std::filesystem::exists(path))
 			{
-				std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level + 1) << path.filename().u8string() << "\n";
+				std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level*2) << path.filename().u8string() << "\n";
 				result = true;
 			}
 			else
 			{
-				std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level + 1) << path.filename().u8string() << "(!)\n";
+				std::cout << std::setfill('.') << setw(path.filename().u8string().size() + level*2) << path.filename().u8string() << "(!)\n";
 			}
 			break;
 		case 2:
@@ -131,7 +126,10 @@ bool TreeBuilder::CheckAndPrintFile(std::pair<string, char>& file)
 			m_count[path.filename().u8string()] = 1;
 		}
 	}
-	file.first = path.u8string();
+	if (result)
+	{
+		file.first = path.u8string();
+	}
 	return result;
 }
 

@@ -57,9 +57,10 @@ void TreeBuilder::DoWork(vector<std::pair<string, char>> &data)
 		if (CheckAndPrintFile(data[i])) {
 			auto result = GetDependFromFile(data[i].first);
 			if (!result.empty())
+			{
 				DoWork(result);
 				level--;
-				
+			}
 		}
 	}
 }
@@ -69,7 +70,7 @@ bool TreeBuilder::CheckAndPrintFile(std::pair<string, char>& file)
 	auto result = false;
 	std::filesystem::path path;
 	std::filesystem::path checkext(file.first);
-	if (checkext.extension() == L".hpp" || checkext.extension() == L".cpp")
+	if (checkext.extension() == L".hpp" || checkext.extension() == L".cpp" || checkext.extension() == L".h")
 	{
 		switch (file.second)
 		{
@@ -119,7 +120,10 @@ bool TreeBuilder::CheckAndPrintFile(std::pair<string, char>& file)
 		if (mapref != m_count.end())
 		{
 			mapref->second++;
-			result = false;
+			if (file.second != 2) 
+			{
+				result = false;
+			}
 		}
 		else
 		{
@@ -223,7 +227,7 @@ vector<std::pair<string, char>> TreeBuilder::ReadDirectory(std::string path)
 	{
 		auto pa = p.path();
 		auto extension = pa.extension();
-		if (extension == L".hpp" || extension == L".cpp" )
+		if (extension == L".hpp" || extension == L".cpp" || extension == L".h")
 		{
 			files.push_back(std::pair<string, char>(pa.u8string(), 2));
 		}

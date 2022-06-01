@@ -119,15 +119,18 @@ bool TreeBuilder::CheckAndPrintFile(std::pair<string, char>& file)
 		auto mapref = m_count.find(path.filename().u8string());
 		if (mapref != m_count.end())
 		{
-			mapref->second++;
 			if (file.second != 2) 
 			{
+				mapref->second++;
 				result = false;
 			}
 		}
 		else
 		{
-			m_count[path.filename().u8string()] = 1;
+			if (file.second != 2)
+			{
+				m_count[path.filename().u8string()] = 1;
+			}
 		}
 	}
 	if (result)
